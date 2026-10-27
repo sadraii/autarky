@@ -1,0 +1,48 @@
+name: Certificate expiry
+
+on:
+  schedule:
+    # UTC. Scheduled workflows can be delayed. GitHub can disable them after
+    # 60 days with no repository activity in a public repository.
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      test_alert:
+        description: 'Send and close a labeled test issue. Do not test the certificate.'
+        type: boolean
+        required: false
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: certificate-expiry-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    name: Check certificate or send test alert
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check public TLS certificate or send test alert
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          # Pass the boolean as data. Do not put input expressions in shell code.
+          TEST_ALERT: ${{ github.event_name == 'workflow_dispatch' && inputs.test_alert }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$TEST_ALERT" == 'true' ]]; then
+            python3 scripts/check-certificate.py --host 40.160.103.121 --port 443 --warning-hours 48 --repo "$GH_REPO" --test-alert
+          else
+            python3 scripts/check-certificate.py --host 40.160.103.121 --port 443 --warning-hours 48 --repo "$GH_REPO"
+          fi

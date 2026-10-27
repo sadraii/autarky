@@ -38,10 +38,11 @@ if name == 'gh':
 elif name == 'tar':
     assert args == ['-xzf', 'autarky-x86_64-unknown-linux-gnu.tar.gz'], args
     with tarfile.open(args[1]) as archive:
-        assert archive.getnames() == ['autarky']
+        assert archive.getnames() == ['autarky', 'LICENSE']
         member = archive.getmember('autarky')
         owned('autarky').write_bytes(archive.extractfile(member).read())
         owned('autarky').chmod(0o755)
+        owned('LICENSE').write_bytes(archive.extractfile('LICENSE').read())
 elif name == 'mkdir':
     assert args[0] == '-p'
     owned(args[1]).mkdir(parents=True, exist_ok=True)
@@ -64,6 +65,12 @@ def release_block():
 
 
 class ReadmeInstallTest(unittest.TestCase):
+    def test_both_crates_distribute_the_same_mit_license(self):
+        # Separate Cargo packages must retain the same copyright and permission notice.
+        root = Path(__file__).resolve().parents[1]
+        self.assertEqual((root / 'server/LICENSE').read_bytes(), (root / 'LICENSE').read_bytes())
+        self.assertTrue((root / 'LICENSE').read_text().startswith('MIT License\n'))
+
     def test_download_and_verification_gate_all_install_steps(self):
         block = release_block()
         shell = shutil.which('bash')
@@ -87,6 +94,11 @@ class ReadmeInstallTest(unittest.TestCase):
                     member.size = len(payload)
                     member.mode = 0o755
                     archive.addfile(member, io.BytesIO(payload))
+                    license_text = (Path(__file__).resolve().parents[1] / 'LICENSE').read_bytes()
+                    member = tarfile.TarInfo('LICENSE')
+                    member.size = len(license_text)
+                    member.mode = 0o644
+                    archive.addfile(member, io.BytesIO(license_text))
                 digest = hashlib.sha256((root / 'payload').read_bytes()).hexdigest()
                 (root / 'checksum').write_text(
                     digest + '  autarky-x86_64-unknown-linux-gnu.tar.gz\n')
@@ -103,6 +115,7 @@ class ReadmeInstallTest(unittest.TestCase):
                     self.assertEqual(calls, ['gh', 'tar', 'mkdir', 'install', 'autarky'])
                     self.assertIn('Checksum verified', result.stdout)
                     self.assertEqual((root / 'home/.local/bin/autarky').read_text(), wrapper)
+                    self.assertEqual((work / 'LICENSE').read_bytes(), license_text)
                 else:
                     self.assertNotEqual(result.returncode, 0,
                                         f'{case}: shell accepted failure; calls={calls}')

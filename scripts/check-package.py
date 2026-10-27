@@ -44,7 +44,7 @@ def main() -> None:
     manifest = tomllib.loads((ROOT / "Cargo.toml").read_text(encoding="utf-8"))
     package = manifest["package"]
     prefix = f"{package['name']}-{package['version']}"
-    required = PROMPTS | {"Cargo.toml", "Cargo.lock", "README.md"}
+    required = PROMPTS | {"Cargo.toml", "Cargo.lock", "README.md", "LICENSE"}
     required |= {
         path.relative_to(ROOT).as_posix()
         for directory in (ROOT / "src", ROOT / "tests")

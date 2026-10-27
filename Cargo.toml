@@ -5,7 +5,7 @@ edition = "2021"
 description = "Local LLM benchmark launcher for llama-server"
 license = "MIT"
 repository = "https://github.com/sadraii/autarky"
-include = ["src/**", "prompts/**", "tests/**", "Cargo.toml", "Cargo.lock", "README.md"]
+include = ["src/**", "prompts/**", "tests/**", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE"]
 
 [[bin]]
 name = "autarky"

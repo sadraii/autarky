@@ -79,6 +79,9 @@ jobs:
           python3 - <<'PY'
           import hashlib, os, pathlib, tarfile
           target = os.environ['TARGET']
+          license_file = pathlib.Path('LICENSE')
+          if not license_file.is_file():
+              raise RuntimeError('Missing release license')
           output = pathlib.Path('dist')
           output.mkdir()
           for name, directory in (('autarky', pathlib.Path('target')), ('autarky-server', pathlib.Path('server/target'))):
@@ -88,12 +91,17 @@ jobs:
               archive = output / f'{name}-{target}.tar.gz'
               with tarfile.open(archive, 'w:gz') as bundle:
                   bundle.add(binary, arcname=name)
+                  bundle.add(license_file, arcname='LICENSE')
               with tarfile.open(archive, 'r:gz') as bundle:
                   entries = bundle.getmembers()
-                  if len(entries) != 1 or entries[0].name != name or not entries[0].isfile() or not entries[0].mode & 0o111:
+                  if len(entries) != 2 or {entry.name for entry in entries} != {name, 'LICENSE'} or not all(entry.isfile() for entry in entries):
                       raise RuntimeError(f'Invalid binary archive: {archive}')
-                  if bundle.extractfile(entries[0]).read() != binary.read_bytes():
+                  if not bundle.getmember(name).mode & 0o111:
+                      raise RuntimeError(f'Binary is not executable: {archive}')
+                  if bundle.extractfile(name).read() != binary.read_bytes():
                       raise RuntimeError(f'Archive content mismatch: {archive}')
+                  if bundle.extractfile('LICENSE').read() != license_file.read_bytes():
+                      raise RuntimeError(f'Archive license mismatch: {archive}')
               digest = hashlib.sha256(archive.read_bytes()).hexdigest()
               archive.with_name(archive.name + '.sha256').write_text(f'{digest}  {archive.name}\n', encoding='utf-8')
           PY

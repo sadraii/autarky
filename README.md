@@ -39,7 +39,7 @@ Install `llama-server` separately and obtain a GGUF model you are permitted to u
 
 ### Release archives
 
-The release workflow prepares **draft** GitHub releases. It does not guarantee that a published release is available. Check the releases in `sadraii/autarky` before using this alternative. Planned archive names contain a full Rust target triple:
+The release workflow prepares **draft** GitHub releases. It does not guarantee that a published release is available. Check the releases in `sadraii/autarky` before using this alternative. Each archive contains the executable and its MIT license. Archive names contain a full Rust target triple:
 
 | Platform | Target |
 | --- | --- |
@@ -144,7 +144,7 @@ AUTARKY_SERVER_DB=./submissions.db BIND_ADDR=127.0.0.1 PORT=8080 \
 
 This starts a local development service, not a production deployment. The server speaks plain HTTP and binds to loopback by default. For remote clients, place it behind an HTTPS/TLS terminator; do not expose the HTTP listener publicly. The server uses direct socket peer addresses and does not trust forwarding headers. Clients behind one reverse proxy share its peer bucket: enforce per-client limits at the trusted proxy and size the backend bucket deliberately.
 
-The OVH community service uses `https://40.160.103.121`. To enable sharing with this service, run `autarky config --key server_url --value https://40.160.103.121`. Fresh installations remain local-only until configured. The web root opens `/health`; there is no web dashboard. Deployment settings, certificate renewal, and recovery steps are in `deploy/ovh/README.txt`.
+The OVH community service uses `https://40.160.103.121`. To enable sharing with this service, run `autarky config --key server_url --value https://40.160.103.121`. Fresh installations remain local-only until configured. The web root opens `/health`; there is no web dashboard. TLS termination, certificate renewal, backups, and recovery are operator-managed; running the development server alone does not configure them.
 
 Server settings are read at startup. Invalid numeric values fail startup rather than disable limits:
 
@@ -191,6 +191,7 @@ cargo install cargo-audit --version 0.22.2 --locked
 cargo audit --deny warnings --file Cargo.lock
 cargo audit --deny warnings --file server/Cargo.lock
 python3 scripts/test-readme-install.py
+python3 scripts/test-certificate-monitor.py
 python3 scripts/check-package.py
 ```
 
@@ -208,8 +209,18 @@ That test checks quoted CSV keys, environment keys, appended keys, and raw key-f
 
 The package check needs Python 3.11 or newer and cached Cargo dependencies. It runs Cargo in offline mode, checks the file list before archiving, rejects model weights, checks all CLI source/tests and all nine prompt files, compares archived content, and asks Cargo to build the extracted package. It does not publish.
 
-CI runs on pushes and pull requests. Tag releases depend on those checks, install explicit targets, test and build both binaries, and produce per-archive portable SHA-256 files. GitHub action revisions are pinned. The workflow creates a draft release only; it does not publish to crates.io or deploy a service. Workflow definitions are not evidence of a successful hosted run. See `PROGRESS.md` for verification limits and `PHASE1_MVP.md` for historical context.
+CI runs on pushes, pull requests, and manual requests. It checks formatting, all test targets, strict Clippy, release builds, and both dependency lockfiles. It also tests the documented CLI installation and verifies the extracted CLI source package. Hosted Linux CI has passed; the external-asset native authentication test remains a separate local check. Native macOS and Windows execution is not yet verified.
+
+Tag releases depend on those checks, install explicit targets, test and build both binaries, and produce per-archive portable SHA-256 files. GitHub action revisions are pinned. The release workflow creates a draft only; it does not publish to crates.io or deploy a service. A passing Linux CI run does not verify the native macOS release jobs.
+
+## Certificate-expiry alerts
+
+The `Certificate expiry` GitHub Actions workflow checks the public community service every six hours. It validates the served TLS certificate and alerts when 48 hours or less remain, or when TLS verification or connection fails. It creates one incident issue, assigns and mentions the repository owner, avoids duplicate issues, and closes the issue after recovery. Delivery uses GitHub notifications; the owner's notification settings determine email or mobile delivery.
+
+The workflow can be run manually, including a clearly marked test alert that is created and closed without changing real incident issues. No mail credentials are stored on the VPS, and this check does not change certificate renewal or backup jobs.
+
+GitHub can delay scheduled runs and disables scheduled workflows in public repositories after 60 days without repository activity. Keep the workflow enabled and check its run history. This schedule is not an independent always-on monitoring service.
 
 ## License
 
-MIT.
+MIT. See [LICENSE](LICENSE). The license is included in both Cargo source packages and both binary release archives.

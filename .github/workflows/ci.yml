@@ -49,6 +49,11 @@ jobs:
       - name: Test CLI documentation
         if: matrix.crate == 'cli'
         run: cargo test --locked --doc
+      - name: Test certificate monitor
+        if: matrix.crate == 'cli'
+        env:
+          TMPDIR: ${{ runner.temp }}
+        run: python3 scripts/test-certificate-monitor.py
       - name: Check all targets with strict Clippy
         run: cargo clippy --locked --all-targets -- -D warnings
       - name: Build release binary
