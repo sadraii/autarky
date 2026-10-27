@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_TOOLCHAIN: '1.99.1'
+
+jobs:
+  check:
+    name: Check ${{ matrix.crate }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - crate: cli
+            directory: .
+          - crate: server
+            directory: server
+    defaults:
+      run:
+        working-directory: ${{ matrix.directory }}
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install tested Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --component rustfmt --component clippy
+          rustup default "$RUST_TOOLCHAIN"
+          rustc --version
+          cargo --version
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Test all targets
+        run: cargo test --locked --all-targets
+      - name: Test CLI documentation
+        if: matrix.crate == 'cli'
+        run: cargo test --locked --doc
+      - name: Check all targets with strict Clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Test documented CLI installation failures
+        if: matrix.crate == 'cli'
+        env:
+          TMPDIR: ${{ runner.temp }}
+        run: python3 scripts/test-readme-install.py
+      - name: Check CLI source package and extracted build
+        if: matrix.crate == 'cli'
+        env:
+          TMPDIR: ${{ runner.temp }}
+        run: python3 scripts/check-package.py
+
+  audit:
+    name: Audit ${{ matrix.lockfile }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        lockfile: [Cargo.lock, server/Cargo.lock]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install audit tool
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+          cargo install cargo-audit --version 0.22.2 --locked
+      - name: Audit locked dependencies
+        run: cargo audit --deny warnings --file "${{ matrix.lockfile }}"

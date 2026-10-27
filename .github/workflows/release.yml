@@ -1,0 +1,151 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_TOOLCHAIN: '1.99.1'
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    name: Build ${{ matrix.target }}
+    needs: checks
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - os: macos-15
+            target: aarch64-apple-darwin
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install explicit Rust target
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --target "$TARGET"
+          rustup default "$RUST_TOOLCHAIN"
+          rustc --version
+          cargo --version
+      - name: Check tag matches both package versions
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess
+          for manifest in ('Cargo.toml', 'server/Cargo.toml'):
+              result = subprocess.run(['cargo', 'metadata', '--locked', '--no-deps', '--format-version', '1', '--manifest-path', manifest], check=True, capture_output=True, text=True)
+              packages = json.loads(result.stdout)['packages']
+              assert len(packages) == 1, manifest
+              assert os.environ['RELEASE_TAG'] == 'v' + packages[0]['version'], manifest + ': tag/version mismatch'
+          PY
+      - name: Test both crates on the native target
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          cargo test --locked --all-targets --target "$TARGET"
+          cargo test --locked --doc --target "$TARGET"
+          cargo test --locked --manifest-path server/Cargo.toml --all-targets --target "$TARGET"
+      - name: Build CLI and community server
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          cargo build --locked --release --target "$TARGET"
+          cargo build --locked --release --manifest-path server/Cargo.toml --target "$TARGET"
+      - name: Archive both binaries and calculate portable SHA-256 checksums
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          python3 - <<'PY'
+          import hashlib, os, pathlib, tarfile
+          target = os.environ['TARGET']
+          output = pathlib.Path('dist')
+          output.mkdir()
+          for name, directory in (('autarky', pathlib.Path('target')), ('autarky-server', pathlib.Path('server/target'))):
+              binary = directory / target / 'release' / name
+              if not binary.is_file():
+                  raise RuntimeError(f'Missing release binary: {binary}')
+              archive = output / f'{name}-{target}.tar.gz'
+              with tarfile.open(archive, 'w:gz') as bundle:
+                  bundle.add(binary, arcname=name)
+              with tarfile.open(archive, 'r:gz') as bundle:
+                  entries = bundle.getmembers()
+                  if len(entries) != 1 or entries[0].name != name or not entries[0].isfile() or not entries[0].mode & 0o111:
+                      raise RuntimeError(f'Invalid binary archive: {archive}')
+                  if bundle.extractfile(entries[0]).read() != binary.read_bytes():
+                      raise RuntimeError(f'Archive content mismatch: {archive}')
+              digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+              archive.with_name(archive.name + '.sha256').write_text(f'{digest}  {archive.name}\n', encoding='utf-8')
+          PY
+      - name: Upload target artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish GitHub release assets
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - name: Verify all release assets before publication
+        run: |
+          python3 - <<'PY'
+          import hashlib, pathlib
+          output = pathlib.Path('dist')
+          targets = ('x86_64-unknown-linux-gnu', 'aarch64-apple-darwin', 'x86_64-apple-darwin')
+          expected = {f'{name}-{target}.tar.gz' for name in ('autarky', 'autarky-server') for target in targets}
+          expected |= {name + '.sha256' for name in tuple(expected)}
+          if {path.name for path in output.iterdir()} != expected:
+              raise RuntimeError('Missing or unexpected release assets')
+          for checksum in output.glob('*.sha256'):
+              digest, filename = checksum.read_text(encoding='utf-8').strip().split('  ', 1)
+              if filename != checksum.name.removesuffix('.sha256') or hashlib.sha256((output / filename).read_bytes()).hexdigest() != digest:
+                  raise RuntimeError(f'Checksum mismatch: {checksum}')
+          print(f'Verified {len(expected)} release assets')
+          PY
+      - name: Publish verified assets (no crates.io publication or deployment)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" dist/* --verify-tag --draft --title "Autarky $RELEASE_TAG" --generate-notes
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          result = subprocess.run(['gh', 'release', 'view', os.environ['RELEASE_TAG'], '--json', 'tagName,isDraft,assets'], check=True, capture_output=True, text=True)
+          release = json.loads(result.stdout)
+          expected = {path.name for path in pathlib.Path('dist').iterdir()}
+          if release['tagName'] != os.environ['RELEASE_TAG'] or not release['isDraft'] or {asset['name'] for asset in release['assets']} != expected:
+              raise RuntimeError('Draft release read-back did not match expected assets')
+          print(f'Confirmed draft release {release["tagName"]} with {len(expected)} assets')
+          PY

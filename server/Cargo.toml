@@ -1,0 +1,23 @@
+[package]
+name = "autarky-server"
+version = "0.1.0"
+edition = "2021"
+description = "Community server for Autarky benchmark sharing"
+
+[dependencies]
+actix-web = { version = "4", default-features = false, features = ["macros"] }
+rusqlite = { version = "0.31", features = ["bundled", "hooks"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1.53.3", features = ["sync", "time", "macros"] }
+log = "0.4"
+env_logger = "0.11"
+dirs = "5"
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true

@@ -1,0 +1,117 @@
+[
+  {
+    "commit": "46dcee6",
+    "ddl": [
+      "CREATE TABLE IF NOT EXISTS hardware_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            gpu_family TEXT NOT NULL,\n            vram_gb REAL NOT NULL,\n            system_ram_gb INTEGER,\n            os_platform TEXT\n        )",
+      "CREATE TABLE IF NOT EXISTS model_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            model_name TEXT NOT NULL,\n            file_path TEXT UNIQUE,\n            quantization TEXT,\n            architecture_type TEXT,\n            expert_count INTEGER DEFAULT 0,\n            parameters_billions REAL\n        )",
+      "CREATE TABLE IF NOT EXISTS benchmark_runs (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,\n            hardware_id INTEGER REFERENCES hardware_fingerprints(id),\n            model_id INTEGER REFERENCES model_fingerprints(id),\n            flags_used TEXT,\n            context_lengths_tested TEXT,\n            raw_metrics TEXT,\n            oom_boundary INTEGER,\n            oom INTEGER DEFAULT 0,\n            benchmark_suite_version TEXT,\n            llama_server_version TEXT\n        )",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_hardware ON benchmark_runs(hardware_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_model ON benchmark_runs(model_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_timestamp ON benchmark_runs(timestamp)",
+      "ALTER TABLE benchmark_runs ADD COLUMN parsed_flags TEXT",
+      "ALTER TABLE benchmark_runs ADD COLUMN llama_server_version TEXT"
+    ]
+  },
+  {
+    "commit": "71fb32e",
+    "ddl": [
+      "CREATE TABLE IF NOT EXISTS hardware_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            gpu_family TEXT NOT NULL,\n            vram_gb REAL NOT NULL,\n            system_ram_gb INTEGER,\n            os_platform TEXT\n        )",
+      "CREATE TABLE IF NOT EXISTS model_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            model_name TEXT NOT NULL,\n            file_path TEXT UNIQUE,\n            quantization TEXT,\n            architecture_type TEXT,\n            expert_count INTEGER DEFAULT 0,\n            parameters_billions REAL\n        )",
+      "CREATE TABLE IF NOT EXISTS benchmark_runs (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,\n            hardware_id INTEGER REFERENCES hardware_fingerprints(id),\n            model_id INTEGER REFERENCES model_fingerprints(id),\n            flags_used TEXT,\n            context_lengths_tested TEXT,\n            raw_metrics TEXT,\n            oom_boundary INTEGER,\n            oom INTEGER DEFAULT 0,\n            benchmark_suite_version TEXT,\n            llama_server_version TEXT\n        )",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_hardware ON benchmark_runs(hardware_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_model ON benchmark_runs(model_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_timestamp ON benchmark_runs(timestamp)",
+      "ALTER TABLE benchmark_runs ADD COLUMN parsed_flags TEXT",
+      "ALTER TABLE benchmark_runs ADD COLUMN llama_server_version TEXT"
+    ]
+  },
+  {
+    "commit": "a7cb89b",
+    "ddl": [
+      "CREATE TABLE IF NOT EXISTS hardware_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            gpu_family TEXT NOT NULL,\n            vram_gb REAL NOT NULL,\n            system_ram_gb INTEGER,\n            os_platform TEXT\n        )",
+      "CREATE TABLE IF NOT EXISTS model_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            model_name TEXT NOT NULL,\n            file_path TEXT UNIQUE,\n            quantization TEXT,\n            architecture_type TEXT,\n            expert_count INTEGER DEFAULT 0,\n            parameters_billions REAL\n        )",
+      "CREATE TABLE IF NOT EXISTS benchmark_runs (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,\n            hardware_id INTEGER REFERENCES hardware_fingerprints(id),\n            model_id INTEGER REFERENCES model_fingerprints(id),\n            flags_used TEXT,\n            context_lengths_tested TEXT,\n            raw_metrics TEXT,\n            oom_boundary INTEGER,\n            oom INTEGER DEFAULT 0,\n            benchmark_suite_version TEXT,\n            llama_server_version TEXT\n        )",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_hardware ON benchmark_runs(hardware_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_model ON benchmark_runs(model_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_timestamp ON benchmark_runs(timestamp)",
+      "ALTER TABLE benchmark_runs ADD COLUMN llama_server_version TEXT"
+    ]
+  },
+  {
+    "commit": "e5478d3",
+    "ddl": [
+      "CREATE TABLE IF NOT EXISTS hardware_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            gpu_family TEXT NOT NULL,\n            vram_gb REAL NOT NULL,\n            system_ram_gb INTEGER,\n            os_platform TEXT\n        )",
+      "CREATE TABLE IF NOT EXISTS model_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            model_name TEXT NOT NULL,\n            file_path TEXT UNIQUE,\n            quantization TEXT,\n            architecture_type TEXT,\n            expert_count INTEGER DEFAULT 0,\n            parameters_billions REAL\n        )",
+      "CREATE TABLE IF NOT EXISTS benchmark_runs (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,\n            hardware_id INTEGER REFERENCES hardware_fingerprints(id),\n            model_id INTEGER REFERENCES model_fingerprints(id),\n            flags_used TEXT,\n            context_lengths_tested TEXT,\n            raw_metrics TEXT,\n            oom_boundary INTEGER,\n            oom INTEGER DEFAULT 0,\n            benchmark_suite_version TEXT,\n            llama_server_version TEXT\n        )",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_hardware ON benchmark_runs(hardware_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_model ON benchmark_runs(model_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_timestamp ON benchmark_runs(timestamp)"
+    ]
+  },
+  {
+    "commit": "a267364",
+    "ddl": [
+      "CREATE TABLE IF NOT EXISTS hardware_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            gpu_family TEXT NOT NULL,\n            vram_gb REAL NOT NULL,\n            system_ram_gb INTEGER,\n            os_platform TEXT\n        )",
+      "CREATE TABLE IF NOT EXISTS model_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            model_name TEXT NOT NULL,\n            file_path TEXT UNIQUE,\n            quantization TEXT,\n            architecture_type TEXT,\n            expert_count INTEGER DEFAULT 0,\n            parameters_billions REAL\n        )",
+      "CREATE TABLE IF NOT EXISTS benchmark_runs (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,\n            hardware_id INTEGER REFERENCES hardware_fingerprints(id),\n            model_id INTEGER REFERENCES model_fingerprints(id),\n            flags_used TEXT,\n            context_lengths_tested TEXT,\n            raw_metrics TEXT,\n            oom_boundary INTEGER,\n            oom INTEGER DEFAULT 0,\n            benchmark_suite_version TEXT\n        )",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_hardware ON benchmark_runs(hardware_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_model ON benchmark_runs(model_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_timestamp ON benchmark_runs(timestamp)"
+    ]
+  },
+  {
+    "commit": "c1937c8",
+    "ddl": [
+      "CREATE TABLE IF NOT EXISTS hardware_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            gpu_family TEXT NOT NULL,\n            vram_gb REAL NOT NULL,\n            cpu_arch TEXT,\n            cpu_cores INTEGER,\n            system_ram_gb INTEGER,\n            os_platform TEXT\n        )",
+      "CREATE TABLE IF NOT EXISTS model_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            model_name TEXT NOT NULL,\n            gguf_hash TEXT UNIQUE,\n            quantization TEXT,\n            architecture_type TEXT,\n            expert_count INTEGER DEFAULT 0,\n            parameters_billions REAL\n        )",
+      "CREATE TABLE IF NOT EXISTS benchmark_runs (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,\n            hardware_id INTEGER REFERENCES hardware_fingerprints(id),\n            model_id INTEGER REFERENCES model_fingerprints(id),\n            flags_used TEXT,\n            context_lengths_tested TEXT,\n            raw_metrics TEXT,\n            oom_boundary INTEGER,\n            oom INTEGER DEFAULT 0,\n            benchmark_suite_version TEXT\n        )",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_hardware ON benchmark_runs(hardware_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_model ON benchmark_runs(model_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_timestamp ON benchmark_runs(timestamp)"
+    ]
+  },
+  {
+    "commit": "df59f42",
+    "ddl": [
+      "CREATE TABLE IF NOT EXISTS hardware_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            gpu_family TEXT NOT NULL,\n            vram_gb INTEGER NOT NULL,\n            cpu_arch TEXT,\n            cpu_cores INTEGER,\n            system_ram_gb INTEGER,\n            os_platform TEXT\n        )",
+      "CREATE TABLE IF NOT EXISTS model_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            model_name TEXT NOT NULL,\n            gguf_hash TEXT UNIQUE,\n            quantization TEXT,\n            architecture_type TEXT,\n            expert_count INTEGER DEFAULT 0,\n            parameters_billions REAL\n        )",
+      "CREATE TABLE IF NOT EXISTS benchmark_runs (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,\n            hardware_id INTEGER REFERENCES hardware_fingerprints(id),\n            model_id INTEGER REFERENCES model_fingerprints(id),\n            flags_used TEXT,\n            context_lengths_tested TEXT,\n            raw_metrics TEXT,\n            oom_boundary INTEGER,\n            oom INTEGER DEFAULT 0,\n            benchmark_suite_version TEXT\n        )",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_hardware ON benchmark_runs(hardware_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_model ON benchmark_runs(model_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_timestamp ON benchmark_runs(timestamp)"
+    ]
+  },
+  {
+    "commit": "c2c1b80",
+    "ddl": [
+      "CREATE TABLE IF NOT EXISTS hardware_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            gpu_family TEXT NOT NULL,\n            vram_gb INTEGER NOT NULL,\n            cpu_arch TEXT,\n            cpu_cores INTEGER,\n            system_ram_gb INTEGER,\n            os_platform TEXT\n        )",
+      "CREATE TABLE IF NOT EXISTS model_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            model_name TEXT NOT NULL,\n            gguf_hash TEXT UNIQUE,\n            quantization TEXT,\n            architecture_type TEXT,\n            expert_count INTEGER DEFAULT 0,\n            parameters_billions REAL\n        )",
+      "CREATE TABLE IF NOT EXISTS benchmark_runs (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,\n            hardware_id INTEGER REFERENCES hardware_fingerprints(id),\n            model_id INTEGER REFERENCES model_fingerprints(id),\n            flags_used TEXT,\n            context_lengths_tested TEXT,\n            raw_metrics TEXT,\n            oom_boundary INTEGER,\n            oom INTEGER DEFAULT 0,\n            benchmark_suite_version TEXT\n        )",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_hardware ON benchmark_runs(hardware_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_model ON benchmark_runs(model_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_timestamp ON benchmark_runs(timestamp)"
+    ]
+  },
+  {
+    "commit": "fefc49a",
+    "ddl": [
+      "CREATE TABLE IF NOT EXISTS hardware_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            gpu_family TEXT NOT NULL,\n            vram_gb INTEGER NOT NULL,\n            cpu_arch TEXT,\n            cpu_cores INTEGER,\n            system_ram_gb INTEGER,\n            os_platform TEXT\n        )",
+      "CREATE TABLE IF NOT EXISTS model_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            model_name TEXT NOT NULL,\n            gguf_hash TEXT UNIQUE,\n            quantization TEXT,\n            architecture_type TEXT,\n            expert_count INTEGER DEFAULT 0,\n            parameters_billions REAL\n        )",
+      "CREATE TABLE IF NOT EXISTS benchmark_runs (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,\n            hardware_id INTEGER REFERENCES hardware_fingerprints(id),\n            model_id INTEGER REFERENCES model_fingerprints(id),\n            flags_used TEXT,\n            context_lengths_tested TEXT,\n            raw_metrics TEXT,\n            oom_boundary INTEGER,\n            benchmark_suite_version TEXT\n        )",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_hardware ON benchmark_runs(hardware_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_model ON benchmark_runs(model_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_timestamp ON benchmark_runs(timestamp)"
+    ]
+  },
+  {
+    "commit": "d75cb19",
+    "ddl": [
+      "CREATE TABLE IF NOT EXISTS hardware_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            gpu_family TEXT NOT NULL,\n            vram_gb INTEGER NOT NULL,\n            cpu_arch TEXT,\n            cpu_cores INTEGER,\n            system_ram_gb INTEGER,\n            os_platform TEXT\n        )",
+      "CREATE TABLE IF NOT EXISTS model_fingerprints (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            model_name TEXT NOT NULL,\n            gguf_hash TEXT UNIQUE,\n            quantization TEXT,\n            architecture_type TEXT,\n            expert_count INTEGER DEFAULT 0,\n            parameters_billions REAL\n        )",
+      "CREATE TABLE IF NOT EXISTS benchmark_runs (\n            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,\n            hardware_id INTEGER REFERENCES hardware_fingerprints(id),\n            model_id INTEGER REFERENCES model_fingerprints(id),\n            flags_used TEXT,\n            context_lengths_tested TEXT,\n            raw_metrics TEXT,\n            oom_boundary INTEGER,\n            benchmark_suite_version TEXT\n        )",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_hardware ON benchmark_runs(hardware_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_model ON benchmark_runs(model_id)",
+      "CREATE INDEX IF NOT EXISTS idx_benchmarks_timestamp ON benchmark_runs(timestamp)"
+    ]
+  }
+]
