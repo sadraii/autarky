@@ -61,6 +61,7 @@ jobs:
       - name: Test both crates on the native target
         env:
           TARGET: ${{ matrix.target }}
+          TMPDIR: ${{ runner.temp }}
         run: |
           cargo test --locked --all-targets --target "$TARGET"
           cargo test --locked --doc --target "$TARGET"

@@ -3,6 +3,7 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
   workflow_call:
 
 permissions:
@@ -42,12 +43,16 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
       - name: Test all targets
+        env:
+          TMPDIR: ${{ runner.temp }}
         run: cargo test --locked --all-targets
       - name: Test CLI documentation
         if: matrix.crate == 'cli'
         run: cargo test --locked --doc
       - name: Check all targets with strict Clippy
         run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Build release binary
+        run: cargo build --locked --release
       - name: Test documented CLI installation failures
         if: matrix.crate == 'cli'
         env:
